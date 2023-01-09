@@ -1,0 +1,7 @@
+21
+set()
+rootpasskey1234
+
+{21,27, 30, 22, 23}
+{frozenset({21,27}):{22}, frozenset({21,22}):{27}, frozenset({21,30}):{23},frozenset({21,27}):{22},frozenset({21}):{24}}
+{frozenset({27,22}),frozenset({30,23}),frozenset({24})}

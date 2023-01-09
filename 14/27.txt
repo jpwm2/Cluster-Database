@@ -1,0 +1,7 @@
+27
+{21}
+
+
+{27, 30, 22,25, 28, 31}
+{frozenset({21,27}):{22}, frozenset({27,22}):{21}, frozenset({27,30}):{28},frozenset({27,28}):{30},frozenset({27}):{24}, frozenset({24,27}):{25}
+{frozenset({27,22}),frozenset({30,23}),frozenset({24})}

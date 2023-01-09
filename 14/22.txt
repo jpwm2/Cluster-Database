@@ -1,0 +1,7 @@
+22
+{21}
+
+Root
+{22,27,21}
+{frozenset({22,27}):{21}, frozenset({22,21}):{27},frozenset({22}):{24}}
+{frozenset({24}),frozenset({21,27})

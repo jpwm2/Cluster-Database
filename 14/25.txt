@@ -1,0 +1,7 @@
+25
+{21}
+
+Way0
+{25,27,24}
+{frozenset({25,27}):{24}, frozenset({24,25}):{27},frozenset({25}):{24}}
+{frozenset({24}),frozenset({21,27})
