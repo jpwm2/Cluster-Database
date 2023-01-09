@@ -18,10 +18,8 @@ class Obj():
         for objId in literal_eval(rawData[4]):
             self.brothers.add(Obj().releaseObj(objId))
         self.childsPathes = {}
-        for path, childs in enumerate(eval(rawData[5])):
-            objPath = set()
-            for objId in path:
-                objPath.add(Obj().releaseObj(objId))
+        for parent, childs in enumerate(eval(rawData[5])):
+            objParent = Obj().releaseObj(parent)
             objChilds = set()
             for objId in childs:
                 objChilds.add(Obj().releaseObj(objId))
