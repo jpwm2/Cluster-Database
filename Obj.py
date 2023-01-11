@@ -1,177 +1,310 @@
-from __future__  import annotations
+from __future__ import annotations
 from ast import literal_eval
-import copy
 import os
+
+'''
+
+It is possible to explain anything with my difined object and these collections.
+And now, The database is here.
+森羅万象はこの新しく定義されたオブジェクトとそれの集合で表せられます。
+それらによって作られる新しいデータベースです。
+
+'''
 
 
 class Obj():
-    def importObj(self):
-        with open('14/' + str(self.id) + '.txt','r') as f:
-            rawData = f.read()
-        rawData = rawData.split('\n')
-        self.owners = set()
-        for objId in literal_eval(rawData[1]):
-            self.owners.add(Obj().releaseObj(objId))
-        self.passkey = rawData[2]
-        self.data = rawData[3]
-        self.brothers = set()
-        for objId in literal_eval(rawData[4]):
-            self.brothers.add(Obj().releaseObj(objId))
-        self.childsPathes = {}
-        for parent, childs in enumerate(eval(rawData[5])):
-            objParent = Obj().releaseObj(parent)
-            objChilds = set()
-            for objId in childs:
-                objChilds.add(Obj().releaseObj(objId))
-            self.childsPathes[frozenset(objPath)] = objChilds
-        self.pathes = set()
-        for path in literal_eval(rawData[5]):
-            objPath = set()
-            for objId in path:
-                objPath.add(Obj().releaseObj(objId))
-            self.pathes.add(frozenset(objPath))
+    '''
+    
+    Obj is an Object.
+    It is based on security protection (Who likes do bad?)
+    And these are 6 elements to make an Object.
+    セキュリティ保護をベースに作りました。（人の嫌がることはしてもされたくもないでしょうから。）
+    そのうえでオブジェクトとして機能するために6つの要素を分けました。
 
-    def exportObj(self, owners):
-        id = self.getId()
-        owners = set()
-        for obj in self.getOwners():
-            owners.add(obj.getId())
-        passkey = self.passkey(owners)
-        data = self.getData(owners)
-        brothers = set()
-        for obj in self.getBrothers():
-            brothers.add(obj.getId())
-        childsPathes = {}
-        for objPath, objChilds in enumerate(self.getChildsPathes()):
-            path = set()
-            for obj in objPath:
-                path.add(obj.getId())
-            childs = set()
-            for obj in objChilds:
-                childs.add(obj.getId())
-            childsPathes[frozenset(path)] = childs
-        pathes = set()
-        for objPath in self.getPathes():
-            path = set()
-            for obj in objPath:
-                path.add(obj.getId())
-            pathes.add(frozenset(path))
-        strObj = id + '\n' + owners + '\n' + passkey + '\n' + data + '\n' + brothers + '\n' + childsPathes + '\n' + pathes
-        with open('14/' + str(id) + '.txt','w') as f:
-            f.write(strObj)
+    self.id (int): an id the one and only.
+    self.owners (set): a set of owners who can operate core methods.
+    self.passkey (str): a passkey it can be an owner if you know the it.
+    self.data (str): a data the obj's
+    self.childs (set): a set of child objs
+    self.parents (set): a set of parent objs
 
-    def releaseObj(self, id: int, owner: dict = {}, passkey: str = '', data: str = '', path: frozenset = frozenset()):
+    '''
+    way0Id = 26
 
-        def existObj(id):
-            path = '14/' + str(id) + '.txt'
-            if os.path.exists(path):
-                return True
-            else:
-                return False
+    def __init__(self, id: int):
+        '''
+
+        Fleshen self with an id.
+
+        Args:
+            id (int): an id self is fleshed with.
+
+        '''
+
+        def importObj():
+            '''
+            
+            Import an obj with self.id from your explore.
+            
+            '''
+            with open(str(self.way0Id) + '/' + str(self.id) + '.txt','r') as f:
+                ids = f.read()
+            ids = ids.split('\n')
+            self.owners = literal_eval(ids[1])
+            self.passkey = ids[2]
+            self.data = ids[3]
+            self.childs = literal_eval(ids[4])
+            self.parents = literal_eval(ids[5])
 
         self.id = id
-        status = False
-        if existObj(id):
-            self.importObj()
-            status = True
+        if self.existObj():
+            importObj()
         else:
-            self.addOwner(owner, owner)
-            self.setData(data, owner)
-            self.setPasskey(passkey, owner)
-            self.addPath(path, owner)
-            self.exportObj()
-        return status
+            self.owners = set()
+            self.passkey = None
+            self.data = None
+            self.childs = set()
+            self.parents = set()
+
+
+    def exportObj(self):
+        '''
+        
+        Export an obj to your explore.
+        
+        '''
+        id = self.id
+        owners = self.owners
+        passkey = self.passkey
+        data = self.data
+        rawChilds = self.childs
+        rawParents = self.parents
+        ids = f"{id}\n{owners}\n{passkey or ''}\n{data or ''}\n{rawChilds}\n{rawParents}"
+        with open(str(self.way0Id) + '/' + str(self.id) + '.txt','w') as f:
+            f.write(ids)
+
+
+    def existObj(self):
+        '''
+        
+        Check self is in explore.
+
+        Returns:
+            bool: True if self is in explore, else False.
+        
+        '''
+        return True if os.path.exists(str(self.way0Id) + '/' + str(self.id) + '.txt') else False
+
 
     def getId(self):
+        '''
+        
+        Get self.id
+
+        return:
+            int: self.id
+        
+        '''
         return self.id
 
-    def getData(self, owners: dict):
-        if self.makeSureItisYou(self.getId(), owners):
+
+    def getData(self, passkeys: set = {''}):
+        '''
+        
+        Get self.data if you are owners.
+
+        Args:
+            passkeys (set): prove myself.
+
+        Return:
+            str: self.data if you are owners.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
             return self.data
 
-    def setData(self, owners: dict, data: str):
-        if self.makeSureItisYou(self.getId(), owners):
+
+    def setData(self, passkeys: set = {''}, data: str = ''):
+        '''
+        
+        Set a data to self.data if you are owners.
+
+        Args:
+            passkeys (set): prove myself.
+            data (str): a data you set newly.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
             self.data = data
             self.exportObj()
 
-    def getPasskey(self, owners: dict):
-        if self.makeSureItisYou(self.getId(), owners):
+
+    def getPasskey(self, passkeys: set = {''}):
+        '''
+        
+        Get self.passkey if you are owners.
+
+        Args:
+            passkeys (set): prove myself.
+
+        Returns:
+            str: self.passkey if you are owners.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
             return self.passkey
 
-    def setPasskey(self, owners: dict, passkey: str):
-        if self.makeSureItisYou(self.getId(), owners):
+
+    def setPasskey(self, passkeys: set = {''}, passkey: str = ''):
+        '''
+        
+        Set a passkey to self.passkey if you are owners.
+
+        Args:
+            passkeys (set): prove myself.
+            passkey (str): a passkey you set newly.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
             self.passkey = passkey
             self.exportObj()
 
+
     def getOwners(self):
+        '''
+        
+        Get an owner Obj.
+
+        Returns:
+            set: self.owners
+
+        '''
         return self.owners
 
-    def addOwner(self, owners: dict, addObj: Obj):
-        if self.makeSureItisYou(self.getId(), owners):
-            self.owners.add(addObj.getId())
-            self.exportObj()
 
-    def deleteOwner(self, owners: dict, deleteObj: Obj):
-        if self.makeSureItisYou(deleteObj.getId(), owners):
-            self.owners.remove(deleteObj.getId())
-            self.exportObj()
-
-    def getBrothers(self):
-        return self.brothers
-
-    def getChildsPathes(self):
-        return self.childsPathes
-
-    def getPathes(self):
-        return self.path
-
-    def addPath(self, owners: dict, addPath: frozenset):
-        if self.makeSureItisYou(self, owners):
-            self.path.add(addPath)
-            for obj in addPath:
-                obj.brohers |= addPath
-                obj.childsPathes[addPath].add(self.getId())
-                obj.exportObj()
-
-    def deletePath(self, owners: dict, deletePath: frozenset):
-        selfId = self.getId()
-        if self.makeSureItisYou(selfId, owners):
-            self.path.remove(deletePath)
-            for obj in deletePath:
-                childsPath = obj.childsPathes.getchildsPathes()
-                childs = childsPath[deletePath]
-                childs.remove(selfId)
-                if childs == set():
-                    del childs
-                cluster = {}
-                for obj2 in childsPath.keys():
-                    cluster |= obj2
-                obj.brother = cluster
-                obj.exportObj()
-
-    def makeSureItisYou(self, obj: Obj, owners : dict):
+    def addOwner(self, passkeys: set, addId: int):
+        '''
         
-        def operatePasskeyOwner(obj, owners):
+        Add an owner Obj to self.owners if you are owners.
 
-            return True if obj.passkey == owners.get(obj) else False
+        Args:
+            passkeys (set): prove myself.
+            addId (int): an Id you add.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
+            self.owners.add(addId)
+            self.exportObj()
 
-        def allowPasskeyOwner(ownerNumber, ownerCount):
-            if ownerNumber == 0:
-                return True
-            else:
-                if ownerCount == 0:
-                    ownerCount = 0.1
-                return True if ownerNumber / ownerCount < 2 else False
-        owners0 = obj.getOwners()
-        ownerNumber = 0
+
+    def deleteOwner(self, passkeys: set, deleteId: int):
+        '''
+        
+        Delete an owner Obj to self.owners if you are owners.
+
+        Args:
+            passkeys (set): prove myself.
+            deleteId (int): an Id you delete.
+        
+        '''
+        deleteObj = Obj(deleteId)
+        if self.makeSureOwnerIsYou(deleteObj, passkeys):
+            self.owners.remove(deleteId)
+            self.exportObj()
+
+
+    def getChilds(self):
+        '''
+        
+        Get Child Objs.
+
+        Returns:
+            set: self.childs
+
+        '''
+        return self.childs
+
+
+    def getParents(self):
+        '''
+        
+        Get Parent Objs.
+
+        Returns:
+            set: self.parents
+
+        '''
+        return self.parents
+
+
+    def addParent(self, passkeys: set, addId: int):
+        '''
+
+        Add an Obj to self.parents if you are owners.
+        And add self to the Obj's.childs if you are owners.
+        
+        Args:
+            passkeys (set): prove myself.
+            addId (set): an id you add.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
+            self.parents.add(addId)
+            addObj = Obj(addId)
+            addObj.childs.add(self.getId())
+            self.exportObj()
+            addObj.exportObj()
+
+
+    def deleteParent(self, passkeys: set, deleteId: int):
+        '''
+
+        Delete an Obj to self.parents if you are owners.
+        And delete self to the Obj's.childs if you are owners.
+        
+        Args:
+            passkeys (set): prove myself.
+            deleteId (set): an id you delete.
+        
+        '''
+        if self.makeSureOwnerIsYou(self, passkeys):
+            self.parents.remove(deleteId)
+            deleteObj = Obj(deleteId)
+            deleteObj.childs.remove(self.getId())
+            self.exportObj()
+            deleteObj.exportObj()
+
+
+    def makeSureOwnerIsYou(self, obj: Obj, passkeys : set):
+        '''
+        
+        Make sure you are owner.
+        
+        Args:
+            obj (Obj): an Obj judged you are owner.
+            passkeys (set): prove Obj's self.
+            
+        Return:
+            bool: Return True if passkeys is majority in self's owners.
+
+        '''
+
+        def helpFromSelfObj():
+            '''
+            
+            Put in a vote by self with self's passkey.
+
+            Return:
+                int: Return a vote if the passkeys match, else none vote.
+
+            '''
+            return 1 if all({ownerNumber <= (1 if ownerCount == 0 else ownerCount * 2), (obj.passkey or '') in passkeys}) else 0
+
+        owners = obj.getOwners()
+        ownerNumber = 1
         ownerCount = 0
-        for o in owners0:
+        for id in owners:
             ownerNumber += 1
-            ownerCount += 1 if self.makeSureItisYou(o, owners) else 0
-        if allowPasskeyOwner(ownerNumber, ownerCount):
-            if operatePasskeyOwner(obj, owners):
-                ownerCount += 1
-        ownerNumber += 1
-        if ownerCount == 0:
-            ownerCount = 0.1
-        return True if ownerNumber / ownerCount <= 2 else False
+            ownerCount += 1 if self.makeSureOwnerIsYou(Obj(id), passkeys) else 0
+        ownerCount += helpFromSelfObj()
+        return True if ownerNumber < 2 * ownerCount else False

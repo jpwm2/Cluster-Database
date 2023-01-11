@@ -1,9 +1,25 @@
-import Obj
+from Obj import Obj
 import os
 
-if not os.path.exists('14'):
-    os.mkdir('14')
 
-o = Obj.Obj('0')
-o.setData('3',{'0':''})
-o.exportObj()
+'''
+
+There is a field run Obj class.
+
+'''
+
+
+def checkField():
+    '''
+    
+    Check the field it hold Objs.
+    If nothing, make it.
+    
+    '''
+    if not os.path.exists('26'):
+        os.mkdir('26')
+
+
+checkField()
+
+#Please write up Obj class methods right here.
