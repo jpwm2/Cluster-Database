@@ -1,7 +1,0 @@
-24
-{21}
-
-
-{24,27,30,25,26}
-{frozenset({24,27}):{25}, frozenset({24,25}):{27},frozenset({24,30}):{26},frozenset({24,26}):{30},frozenset({24}):{21}}
-{frozenset({21}), frozenset({27,25}). frozenset({30, 26})}
