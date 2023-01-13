@@ -1,6 +1,8 @@
 from __future__ import annotations
 from ast import literal_eval
+import hashlib
 import os
+from scryp import encrypt, decrypt
 
 '''
 
@@ -61,8 +63,8 @@ class Obj():
             importObj()
         else:
             self.owners = set()
-            self.passkey = None
-            self.data = None
+            self.passkey = self.hashKey()
+            self.data = encrypt('None','')
             self.childs = set()
             self.parents = set()
 
@@ -77,9 +79,10 @@ class Obj():
         owners = self.owners
         passkey = self.passkey
         data = self.data
-        rawChilds = self.childs
-        rawParents = self.parents
-        ids = f"{id}\n{owners}\n{passkey or ''}\n{data or ''}\n{rawChilds}\n{rawParents}"
+        childs = self.childs
+        parents = self.parents
+        ids = f"{id}\n{owners}\n{passkey}\n{data}\n{childs}\n{parents}"
+        #print(f"id: {id}, owners: {owners}, passkey: {passkey}, data: {data}, childs: {childs}, parents: {parents}")
         with open(str(self.way0Id) + '/' + str(self.id) + '.txt','w') as f:
             f.write(ids)
 
@@ -108,23 +111,24 @@ class Obj():
         return self.id
 
 
-    def getData(self, passkeys: set = {''}):
+    def getData(self, passkeys: set = {''}, selfPasskey: str = ''):
         '''
         
         Get self.data if you are owners.
 
         Args:
             passkeys (set): prove myself.
+            selfPasskey (str): a key encrypt data with.
 
         Return:
             str: self.data if you are owners.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
-            return self.data
+        if self.makeSureAPieceIsYou(self, passkeys):
+            return decrypt(self.data, selfPasskey)
 
 
-    def setData(self, passkeys: set = {''}, data: str = ''):
+    def setData(self, passkeys: set = {''}, selfPasskey: str = '', data: str = ''):
         '''
         
         Set a data to self.data if you are owners.
@@ -132,41 +136,29 @@ class Obj():
         Args:
             passkeys (set): prove myself.
             data (str): a data you set newly.
+            selfPasskey (str): a key data encrypt by.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
-            self.data = data
+        if self.makeSureOwnerIsYou(passkeys):
+            self.data = encrypt(data, selfPasskey)
             self.exportObj()
 
 
-    def getPasskey(self, passkeys: set = {''}):
-        '''
-        
-        Get self.passkey if you are owners.
-
-        Args:
-            passkeys (set): prove myself.
-
-        Returns:
-            str: self.passkey if you are owners.
-        
-        '''
-        if self.makeSureOwnerIsYou(self, passkeys):
-            return self.passkey
-
-
-    def setPasskey(self, passkeys: set = {''}, passkey: str = ''):
+    def setPasskey(self, passkeys: set = {''}, oldPasskey: str = '', newPasskey: str = ''):
         '''
         
         Set a passkey to self.passkey if you are owners.
 
         Args:
             passkeys (set): prove myself.
-            passkey (str): a passkey you set newly.
+            oldPasskey (str): a passkey you remove.
+            newPasskey (str): a passkey you set.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
-            self.passkey = passkey
+
+        if self.makeSureOwnerIsYou(passkeys):
+            self.data = encrypt(decrypt(self.data, oldPasskey), newPasskey)
+            self.passkey = self.hashKey(newPasskey)
             self.exportObj()
 
 
@@ -192,7 +184,7 @@ class Obj():
             addId (int): an Id you add.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
+        if self.makeSureOwnerIsYou(passkeys):
             self.owners.add(addId)
             self.exportObj()
 
@@ -207,8 +199,7 @@ class Obj():
             deleteId (int): an Id you delete.
         
         '''
-        deleteObj = Obj(deleteId)
-        if self.makeSureOwnerIsYou(deleteObj, passkeys):
+        if Obj(deleteId).makeSureOwnerIsYou(passkeys):
             self.owners.remove(deleteId)
             self.exportObj()
 
@@ -248,7 +239,7 @@ class Obj():
             addId (set): an id you add.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
+        if self.makeSureOwnerIsYou(passkeys):
             self.parents.add(addId)
             addObj = Obj(addId)
             addObj.childs.add(self.getId())
@@ -267,15 +258,35 @@ class Obj():
             deleteId (set): an id you delete.
         
         '''
-        if self.makeSureOwnerIsYou(self, passkeys):
+        if self.makeSureOwnerIsYou(passkeys):
             self.parents.remove(deleteId)
             deleteObj = Obj(deleteId)
             deleteObj.childs.remove(self.getId())
             self.exportObj()
             deleteObj.exportObj()
 
-
-    def makeSureOwnerIsYou(self, obj: Obj, passkeys : set):
+    def makeSureAPieceIsYou(self, passkeys: set):
+        '''
+        
+        Make sure a piece of owner is you.
+        
+        Args:
+            obj (Obj): an Obj judged you are a piece of owner.
+            passkeys (set): prove Obj's self.
+            
+        Returns:
+            bool: Return True if passeys is in self's owners.
+        
+        '''
+        if self.passkey in self.hashKey(passkeys):
+            return True
+        owners = self.getOwners()
+        for id in owners:
+            if Obj(id).makeSureAPieceIsYou(passkeys):
+                return True
+        
+            
+    def makeSureOwnerIsYou(self, passkeys : set):
         '''
         
         Make sure you are owner.
@@ -284,27 +295,38 @@ class Obj():
             obj (Obj): an Obj judged you are owner.
             passkeys (set): prove Obj's self.
             
-        Return:
+        Returns:
             bool: Return True if passkeys is majority in self's owners.
 
         '''
+        ownerNumber = len(self.owners)
+        if ownerNumber == 0:
+                return 1 if self.passkey in self.hashKey(passkeys) else 0
+        else:
+            ownerCount = 0
+            for id in self.owners:
+                ownerCount += Obj(id).makeSureOwnerIsYou(passkeys)
+            return 1 if ownerNumber < ownerCount * 2 else 0
 
-        def helpFromSelfObj():
-            '''
+    def hashKey(self, passkeys: any = ''):
+        '''
+        
+        Create a hash code.
+        
+        Args:
+            passkeys (any): an any of passkeys will be hashed.
+
+        Returns:
+            set: a set of hashed code 
             
-            Put in a vote by self with self's passkey.
-
-            Return:
-                int: Return a vote if the passkeys match, else none vote.
-
-            '''
-            return 1 if all({ownerNumber <= (1 if ownerCount == 0 else ownerCount * 2), (obj.passkey or '') in passkeys}) else 0
-
-        owners = obj.getOwners()
-        ownerNumber = 1
-        ownerCount = 0
-        for id in owners:
-            ownerNumber += 1
-            ownerCount += 1 if self.makeSureOwnerIsYou(Obj(id), passkeys) else 0
-        ownerCount += helpFromSelfObj()
-        return True if ownerNumber < 2 * ownerCount else False
+        '''
+        keyType = str(type(passkeys))
+        hashedPasskeys = None
+        match keyType:
+            case "<class 'str'>":
+                hashedPasskeys = hashlib.sha256(passkeys.encode("utf-8")).hexdigest()
+            case "<class 'set'>":
+                hashedPasskeys = set()
+                for passkey in passkeys:
+                    hashedPasskeys.add(hashlib.sha256(passkey.encode("utf-8")).hexdigest())
+        return hashedPasskeys
