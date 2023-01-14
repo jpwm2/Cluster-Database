@@ -6,7 +6,7 @@ from scryp import encrypt, decrypt
 
 '''
 
-It is possible to explain anything with my difined object and these collections.
+It is possible to explain anything with my difined object and these Cluster.
 And now, The database is here.
 森羅万象はこの新しく定義されたオブジェクトとそれの集合で表せられます。
 それらによって作られる新しいデータベースです。
