@@ -1,7 +1,0 @@
-26
-{21}
-
-Way0
-{26, 30, 24}
-{frozenset({26, 30}):{24}, frozenset({26, 24}):{30}, frozenset({26}):{24}}
-{frozenset({24}), frozenset({24,30})}
