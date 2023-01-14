@@ -1,5 +1,5 @@
-# Collection-Database
-It's Database consisting of Collection. 
+# Cluster-Database
+It's Database consisting of Cluster. 
 It's a revolution the world wide database get a step next.
 Anything can get where it belongs. Anything can be finded by how methods you like.
 
