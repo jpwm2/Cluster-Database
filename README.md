@@ -5,5 +5,4 @@ Anything can get where it belongs. Anything can be finded by how methods you lik
 
 I'll make new app for user extend it safly later.
 
-Created by KF
-企業の皆様、内定とともに詳しい話をお待ちしています。
+Created by K.F.
